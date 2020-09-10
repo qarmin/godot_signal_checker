@@ -77,18 +77,30 @@ fn main() {
                     for line in io::BufReader::new(file).lines() {
                         if let Ok(ip) = line {
                             if ip.contains("ADD_SIGNAL(MethodInfo(\"") {
-                                let vector: Vec<&str> = ip.split('\"').collect();
-                                let signal_name = vector.get(1).unwrap();
+                                let vector: Vec<&str> = ip.split("ADD_SIGNAL(MethodInfo(").collect();
+                                let second_vector: Vec<&str> = vector.get(1).unwrap().split('\"').collect();
+                                let signal_name = second_vector.get(1).unwrap();
 
                                 let current_value = match added_signals.get(&*signal_name.to_string()) {
                                     Some(t) => *t,
                                     None => 0,
                                 };
                                 added_signals.insert(signal_name.to_string(), current_value + 1);
-                            } else if ip.contains("emit_signal(SceneStringNames::get_singleton()->")
-                                || ip.contains("emit_signal(CoreStringNames::get_singleton()->")
-                            {
-                                let vector: Vec<&str> = ip.split("::get_singleton()->").collect();
+                            } else if ip.contains("emit_signal(CoreStringNames::get_singleton()->") {
+                                let vector: Vec<&str> =
+                                    ip.split("emit_signal(CoreStringNames::get_singleton()->").collect();
+                                let second_vector: Vec<&str> = vector.get(1).unwrap().split(',').collect();
+                                let third_vector: Vec<&str> = second_vector.get(0).unwrap().split(')').collect();
+                                let signal_name = third_vector.get(0).unwrap();
+
+                                let current_value = match emitted_signals.get(&*signal_name.to_string()) {
+                                    Some(t) => *t,
+                                    None => 0,
+                                };
+                                emitted_signals.insert(signal_name.to_string(), current_value + 1);
+                            } else if ip.contains("emit_signal(SceneStringNames::get_singleton()->") {
+                                let vector: Vec<&str> =
+                                    ip.split("emit_signal(SceneStringNames::get_singleton()->").collect();
                                 let second_vector: Vec<&str> = vector.get(1).unwrap().split(',').collect();
                                 let third_vector: Vec<&str> = second_vector.get(0).unwrap().split(')').collect();
                                 let signal_name = third_vector.get(0).unwrap();
@@ -164,10 +176,8 @@ fn main() {
         if !emitted_signals.contains_key(signal.0) {
             if !connected_signals.contains_key(signal.0) && !connected_signals.contains_key(signal.0) {
                 added.push(signal.0.clone());
-                println!("Signal \"{}\" is added but never emitted or connected.", signal.0);
             } else {
                 added_connected.push(signal.0.clone());
-                println!("Signal \"{}\" is added and connected but never emitted.", signal.0);
             }
         } else if !connected_signals.contains_key(signal.0) && !connected_signals.contains_key(signal.0) {
             continue; // This was checked above
