@@ -35,7 +35,6 @@ fn main() {
 
     while !folders_to_check.is_empty() {
         current_folder = folders_to_check.pop().unwrap();
-        println!("{}", current_folder);
 
         let read_dir = match fs::read_dir(&current_folder) {
             Ok(t) => t,
@@ -69,9 +68,7 @@ fn main() {
                     Ok(t) => t,
                     Err(_) => continue, // Permission Denied
                 };
-                if (!file_name.ends_with(".cpp") && !file_name.ends_with(".h"))
-                    || file_name.ends_with(".gen.h")
-                {
+                if (!file_name.ends_with(".cpp") && !file_name.ends_with(".h")) || file_name.ends_with(".gen.h") {
                     continue;
                 }
 
@@ -83,60 +80,58 @@ fn main() {
                                 let vector: Vec<&str> = ip.split('\"').collect();
                                 let signal_name = vector.get(1).unwrap();
 
-                                let current_value =
-                                    match added_signals.get(&*signal_name.to_string()) {
-                                        Some(t) => *t,
-                                        None => 0,
-                                    };
+                                let current_value = match added_signals.get(&*signal_name.to_string()) {
+                                    Some(t) => *t,
+                                    None => 0,
+                                };
                                 added_signals.insert(signal_name.to_string(), current_value + 1);
                             } else if ip.contains("emit_signal(SceneStringNames::get_singleton()->")
                                 || ip.contains("emit_signal(CoreStringNames::get_singleton()->")
                             {
                                 let vector: Vec<&str> = ip.split("::get_singleton()->").collect();
-                                let second_vector: Vec<&str> =
-                                    vector.get(1).unwrap().split(',').collect();
-                                let third_vector: Vec<&str> =
-                                    second_vector.get(0).unwrap().split(')').collect();
+                                let second_vector: Vec<&str> = vector.get(1).unwrap().split(',').collect();
+                                let third_vector: Vec<&str> = second_vector.get(0).unwrap().split(')').collect();
                                 let signal_name = third_vector.get(0).unwrap();
 
-                                let current_value =
-                                    match emitted_signals.get(&*signal_name.to_string()) {
-                                        Some(t) => *t,
-                                        None => 0,
-                                    };
+                                let current_value = match emitted_signals.get(&*signal_name.to_string()) {
+                                    Some(t) => *t,
+                                    None => 0,
+                                };
                                 emitted_signals.insert(signal_name.to_string(), current_value + 1);
                             } else if ip.contains("emit_signal(\"") {
                                 let vector: Vec<&str> = ip.split('\"').collect();
                                 let signal_name = vector.get(1).unwrap();
 
-                                let current_value =
-                                    match emitted_signals.get(&*signal_name.to_string()) {
-                                        Some(t) => *t,
-                                        None => 0,
-                                    };
+                                let current_value = match emitted_signals.get(&*signal_name.to_string()) {
+                                    Some(t) => *t,
+                                    None => 0,
+                                };
                                 emitted_signals.insert(signal_name.to_string(), current_value + 1);
                             } else if ip.contains("->connect(\"") {
-                                let vector: Vec<&str> = ip.split('\"').collect();
-                                let signal_name = vector.get(1).unwrap();
+                                let vector: Vec<&str> = ip.split("->connect").collect();
+                                let second_vector: Vec<&str> = vector.get(1).unwrap().split('\"').collect();
+                                let signal_name = second_vector.get(1).unwrap();
 
-                                let current_value =
-                                    match connected_signals.get(&*signal_name.to_string()) {
-                                        Some(t) => *t,
-                                        None => 0,
-                                    };
-                                connected_signals
-                                    .insert(signal_name.to_string(), current_value + 1);
+                                let current_value = match connected_signals.get(&*signal_name.to_string()) {
+                                    Some(t) => *t,
+                                    None => 0,
+                                };
+                                if signal_name == &"/root" {
+                                    println!("{}", file_name);
+                                }
+                                connected_signals.insert(signal_name.to_string(), current_value + 1);
                             } else if ip.contains("connect_compat(\"") {
                                 let vector: Vec<&str> = ip.split('\"').collect();
                                 let signal_name = vector.get(1).unwrap();
 
-                                let current_value =
-                                    match compat_connected_signals.get(&*signal_name.to_string()) {
-                                        Some(t) => *t,
-                                        None => 0,
-                                    };
-                                compat_connected_signals
-                                    .insert(signal_name.to_string(), current_value + 1);
+                                let current_value = match compat_connected_signals.get(&*signal_name.to_string()) {
+                                    Some(t) => *t,
+                                    None => 0,
+                                };
+                                if signal_name == &"/root" {
+                                    println!("{}", file_name);
+                                }
+                                compat_connected_signals.insert(signal_name.to_string(), current_value + 1);
                             }
                         }
                     }
@@ -144,8 +139,97 @@ fn main() {
             }
         }
     }
-    println!("Emitted signals - {:?}", emitted_signals);
-    println!("Added signals - {:?}", added_signals);
-    println!("Connected signals - {:?}", connected_signals);
-    println!("Compat Connected signals - {:?}", compat_connected_signals);
+
+    let mut emitted: Vec<String> = Vec::new();
+    let mut emitted_connected: Vec<String> = Vec::new();
+    let mut emitted_added: Vec<String> = Vec::new();
+    let mut added: Vec<String> = Vec::new();
+    let mut added_connected: Vec<String> = Vec::new();
+    let mut connected: Vec<String> = Vec::new();
+
+    // Checking for unused signals
+    for signal in &emitted_signals {
+        if !added_signals.contains_key(signal.0) {
+            if !connected_signals.contains_key(signal.0) && !connected_signals.contains_key(signal.0) {
+                emitted.push(signal.0.clone());
+            } else {
+                emitted_connected.push(signal.0.clone());
+            }
+        } else if !connected_signals.contains_key(signal.0) && !connected_signals.contains_key(signal.0) {
+            emitted_added.push(signal.0.clone());
+        }
+    }
+
+    for signal in &added_signals {
+        if !emitted_signals.contains_key(signal.0) {
+            if !connected_signals.contains_key(signal.0) && !connected_signals.contains_key(signal.0) {
+                added.push(signal.0.clone());
+                println!("Signal \"{}\" is added but never emitted or connected.", signal.0);
+            } else {
+                added_connected.push(signal.0.clone());
+                println!("Signal \"{}\" is added and connected but never emitted.", signal.0);
+            }
+        } else if !connected_signals.contains_key(signal.0) && !connected_signals.contains_key(signal.0) {
+            continue; // This was checked above
+        }
+    }
+    let mut new_connected_signals: HashMap<String, u32> = Default::default();
+    new_connected_signals.extend(connected_signals);
+    new_connected_signals.extend(compat_connected_signals);
+
+    for signal in &new_connected_signals {
+        if !added_signals.contains_key(signal.0) {
+            if !emitted_signals.contains_key(signal.0) {
+                connected.push(signal.0.clone());
+            } else {
+                continue; // This was checked above
+            }
+        } else if !emitted_signals.contains_key(signal.0) {
+            continue; // This was checked above
+        }
+    }
+
+    println!();
+    for i in &emitted {
+        println!("Signal {} is emitted but never added or connected", i);
+    }
+    println!();
+    for i in &emitted_connected {
+        println!("Signal {} is emitted and connected but never added", i);
+    }
+    println!();
+    for i in &emitted_added {
+        println!("Signal {} is emitted and added but never connected", i);
+    }
+    println!();
+    for i in &added {
+        println!("Signal {} is added but never emitted or connected", i);
+    }
+    println!();
+    for i in &added_connected {
+        println!("Signal {} is added and connected but never emitted", i);
+    }
+    println!();
+    for i in &connected {
+        println!("Signal {} is connected but never added or emitted", i);
+    }
+
+    if emitted.len()
+        + emitted_connected.len()
+        + emitted_added.len()
+        + added.len()
+        + added_connected.len()
+        + connected.len()
+        > 0
+    {
+        println!("\nFound unused signal, exiting with code 1.");
+        process::exit(1);
+    }
+
+    // println!("Emitted signals - {:?}", emitted_signals);
+    // println!("Added signals - {:?}", added_signals);
+    // println!("Connected signals - {:?}", new_connected_signals);
+
+    // println!("Connected signals - {:?}", connected_signals);
+    // println!("Compat Connected signals - {:?}", compat_connected_signals);
 }
