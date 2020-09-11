@@ -76,6 +76,9 @@ fn main() {
                     // Consumes the iterator, returns an (Optional) String
                     for line in io::BufReader::new(file).lines() {
                         if let Ok(ip) = line {
+                            if ip.trim().starts_with("//"){
+                                continue;
+                            }
                             if ip.contains("ADD_SIGNAL(MethodInfo(\"") {
                                 let vector: Vec<&str> = ip.split("ADD_SIGNAL(MethodInfo(").collect();
                                 let second_vector: Vec<&str> = vector.get(1).unwrap().split('\"').collect();
