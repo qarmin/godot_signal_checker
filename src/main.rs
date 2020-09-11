@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::fs::File;
 use std::fs::Metadata;
 use std::io::{self, BufRead};
@@ -6,10 +6,10 @@ use std::path::Path;
 use std::{env, fs, process};
 
 fn main() {
-    let mut added_signals: HashMap<String, u32> = Default::default();
-    let mut emitted_signals: HashMap<String, u32> = Default::default();
-    let mut connected_signals: HashMap<String, u32> = Default::default();
-    let mut compat_connected_signals: HashMap<String, u32> = Default::default();
+    let mut added_signals: BTreeMap<String, u32> = Default::default();
+    let mut emitted_signals: BTreeMap<String, u32> = Default::default();
+    let mut connected_signals: BTreeMap<String, u32> = Default::default();
+    let mut compat_connected_signals: BTreeMap<String, u32> = Default::default();
 
     let all_arguments: Vec<String> = env::args().collect();
     if all_arguments.len() < 2 {
@@ -183,7 +183,7 @@ fn main() {
             continue; // This was checked above
         }
     }
-    let mut new_connected_signals: HashMap<String, u32> = Default::default();
+    let mut new_connected_signals: BTreeMap<String, u32> = Default::default();
     new_connected_signals.extend(connected_signals);
     new_connected_signals.extend(compat_connected_signals);
 
