@@ -131,9 +131,6 @@ fn main() {
                                     Some(t) => *t,
                                     None => 0,
                                 };
-                                if signal_name == &"/root" {
-                                    println!("{}", file_name);
-                                }
                                 connected_signals.insert(signal_name.to_string(), current_value + 1);
                             } else if ip.contains("connect_compat(\"") {
                                 let vector: Vec<&str> = ip.split('\"').collect();
@@ -143,9 +140,6 @@ fn main() {
                                     Some(t) => *t,
                                     None => 0,
                                 };
-                                if signal_name == &"/root" {
-                                    println!("{}", file_name);
-                                }
                                 compat_connected_signals.insert(signal_name.to_string(), current_value + 1);
                             }
                         }
