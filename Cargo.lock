@@ -2,5 +2,4 @@
 # It is not intended for manual editing.
 [[package]]
 name = "godot_unusable_signals"
-version = "0.1.0"
-
+version = "0.1.1"

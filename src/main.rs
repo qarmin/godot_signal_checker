@@ -206,7 +206,7 @@ fn main() {
     }
     println!();
     for i in &emitted_added {
-        println!("Signal {} is emitted and added but never connected", i);
+        println!("Signal {} is emitted and added but never connected, this is just information message which you can ignore.", i);
     }
     println!();
     for i in &added {
@@ -223,7 +223,6 @@ fn main() {
 
     if emitted.len()
         + emitted_connected.len()
-        + emitted_added.len()
         + added.len()
         + added_connected.len()
         + connected.len()
@@ -233,10 +232,4 @@ fn main() {
         process::exit(1);
     }
 
-    // println!("Emitted signals - {:?}", emitted_signals);
-    // println!("Added signals - {:?}", added_signals);
-    // println!("Connected signals - {:?}", new_connected_signals);
-
-    // println!("Connected signals - {:?}", connected_signals);
-    // println!("Compat Connected signals - {:?}", compat_connected_signals);
 }
